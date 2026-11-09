@@ -1,0 +1,274 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// What a member may do inside one room. The room's creator (Room.createdBy)
+// is the "owner": always an ADMIN, and the only one who can change roles,
+// transfer or delete the room.
+enum RoomRole {
+  ADMIN
+  MEMBER
+}
+
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  REVOKED
+}
+
+
+
+
+model User {
+  id              String   @id @default(cuid())
+  fullName        String
+  nickname        String?
+  username        String   @unique
+  avatar          String?
+  email           String   @unique
+  passwordHash    String
+
+  bio             String?
+  country         String?
+  dateOfBirth     DateTime?
+
+  pulseScore      Float    @default(1)
+  streakDays      Int      @default(0)
+  lastActiveDate  DateTime?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  createdRooms    Room[]        @relation("RoomCreator")
+  echoes          Echo[]        @relation("UserEchoes")
+  comments        Comment[]     @relation("UserComments")
+  roomMemberships RoomMember[]
+  saves           Save[]
+  resonations     Resonation[]
+  mentions        Mention[]     @relation("MentionsReceived")
+  logs            UserLog[]
+  notifications   Notification[]
+  invitesReceived RoomInvite[]  @relation("InvitesReceived")
+  invitesSent     RoomInvite[]  @relation("InvitesSent")
+
+  @@index([pulseScore])
+  @@index([createdAt])
+}
+
+
+
+model Room {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  isPublic    Boolean  @default(true)
+
+  createdBy   User     @relation("RoomCreator", fields: [createdById], references: [id])
+  createdById String
+
+  createdAt   DateTime @default(now())
+
+  // Shareable join link: /invite/<inviteCode>. null = no active link.
+  inviteCode          String?   @unique
+  inviteCodeExpiresAt DateTime?
+
+  echoes      Echo[]
+  members     RoomMember[]
+  invites     RoomInvite[]
+
+  @@index([createdById])
+  @@index([isPublic])
+}
+
+
+
+model RoomMember {
+  id      String @id @default(cuid())
+
+  user    User   @relation(fields: [userId], references: [id])
+  userId  String
+
+  room    Room   @relation(fields: [roomId], references: [id])
+  roomId  String
+
+  role     RoomRole @default(MEMBER)
+  joinedAt DateTime @default(now())
+
+  @@unique([userId, roomId])
+
+  @@index([userId])
+  @@index([roomId])
+  @@index([roomId, role])
+}
+
+
+// A direct invitation: an admin invites one specific user to a room.
+// One row per (room, user); re-inviting someone resets the same row to PENDING.
+model RoomInvite {
+  id      String @id @default(cuid())
+
+  room    Room   @relation(fields: [roomId], references: [id])
+  roomId  String
+
+  invitedUser   User   @relation("InvitesReceived", fields: [invitedUserId], references: [id])
+  invitedUserId String
+
+  invitedBy     User   @relation("InvitesSent", fields: [invitedById], references: [id])
+  invitedById   String
+
+  status      InviteStatus @default(PENDING)
+  createdAt   DateTime     @default(now())
+  respondedAt DateTime?
+
+  @@unique([roomId, invitedUserId])
+  @@index([invitedUserId, status])
+  @@index([roomId, status])
+}
+
+
+
+model Echo {
+  id        String   @id @default(cuid())
+  title     String?
+  content   String
+
+  author    User     @relation("UserEchoes", fields: [authorId], references: [id])
+  authorId  String
+
+  room      Room?    @relation(fields: [roomId], references: [id])
+  roomId    String?
+
+  isInSpace Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+
+  comments      Comment[]
+  resonations   Resonation[]
+  saves         Save[]
+  mentions      Mention[]
+
+  @@index([authorId])
+  @@index([roomId])
+  @@index([createdAt])
+  @@index([isInSpace])
+}
+
+
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+
+  author    User     @relation("UserComments", fields: [authorId], references: [id])
+  authorId  String
+
+  echo      Echo     @relation(fields: [echoId], references: [id])
+  echoId    String
+
+  createdAt DateTime @default(now())
+
+  @@index([echoId])
+  @@index([authorId])
+}
+
+
+
+model Resonation {
+  id      String @id @default(cuid())
+
+  user    User   @relation(fields: [userId], references: [id])
+  userId  String
+
+  echo    Echo   @relation(fields: [echoId], references: [id])
+  echoId  String
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, echoId])
+
+  @@index([echoId])
+}
+
+
+
+model Save {
+  id      String @id @default(cuid())
+
+  user    User   @relation(fields: [userId], references: [id])
+  userId  String
+
+  echo    Echo   @relation(fields: [echoId], references: [id])
+  echoId  String
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, echoId])
+
+  @@index([userId])
+}
+
+
+
+model Mention {
+  id      String @id @default(cuid())
+
+  echo    Echo   @relation(fields: [echoId], references: [id])
+  echoId  String
+
+  mentionedUser   User   @relation("MentionsReceived", fields: [mentionedUserId], references: [id])
+  mentionedUserId String
+
+  createdAt DateTime @default(now())
+
+  @@index([mentionedUserId])
+}
+
+
+
+model UserLog {
+  id        String   @id @default(cuid())
+
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+
+  action    String
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+
+
+model Notification {
+  id        String   @id @default(cuid())
+
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String   
+
+  message   String
+  type      String   @default("general")
+  link      String?
+
+  isRead    Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([userId, isRead])
+}

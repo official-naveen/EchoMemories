@@ -1,0 +1,6 @@
+{
+  "crons": [
+    { "path": "/api/pulse/recalculate-daily", "schedule": "30 18 * * *" },
+    { "path": "/api/pulse/check-streak", "schedule": "35 18 * * *" }
+  ]
+}
