@@ -1,135 +1,134 @@
 # EchoMemories
 
-A quiet social space of **echoes** (posts), **rooms** (communities) and **Pulse** (presence score).
-Anonymous posting in *Space*, focused conversation in *EchoRooms*.
+> Say it once. Let it echo.
 
-**Stack:** Next.js 15 (App Router) · React 19 · PostgreSQL · Prisma 7 · JWT sessions in httpOnly cookies
+EchoMemories is a small social platform I built around one idea: a place to share thoughts without the pressure of performing. You post **echoes**, write anonymously in **Space**, gather in **EchoRooms**, and build a presence score called **Pulse** just by showing up.
 
-## Features
+I'm Naveen, a BA Hindi (Hons.) student who likes code as much as language. This project is where the two meet. I designed the product, the database, the API and the interface myself.
 
-- **Auth:** email-verified signup (OTP), login, forgot/reset password (emailed code; resetting signs out other devices)
-- **Space:** anonymous echoes, including anonymous replies from the original author
-- **Rooms:** public and private, join/leave, room feeds
-- **Room roles:** owner, admins and members; only the owner and admins can see the member list
-- **Invites:** invite by username (accept/decline inbox) or share a revocable invite link that expires after 7 days
-- **Echoes:** resonate, save, reply, @mentions, notifications
-- **Pulse:** score, daily streaks, leaderboard
-- **Theme:** light and dark (follows the system, remembers the choice)
+<p align="center">
+  <img src="docs/demo.gif" width="640" alt="EchoMemories demo">
+</p>
 
-## Demo
+## What it does
 
-![Landing page](docs/screenshots/01-landing.png)
-
-![EchoMemories demo](docs/demo.gif)
+- **Echoes:** short posts with an optional title. People can resonate (like), save, reply and @mention others.
+- **Space:** a public feed where every echo is anonymous. The server never sends the author's identity. Only the author sees their own post marked as theirs.
+- **EchoRooms:** public or private communities with their own feeds, roles (owner, admin, member), direct invites and shareable invite links.
+- **Pulse:** a presence score that grows when you post, reply and get mentioned. It rewards daily streaks, slowly decays when you disappear, and feeds a public leaderboard.
+- **Accounts:** email-verified signup with a one-time code, login with email or username, and password reset by emailed code.
+- **Notifications:** replies, mentions, invites and room events show up in one place.
+- **Feeds:** home (my rooms, trending, saved) and Space (latest, most discussed, most resonated).
+- **Design:** responsive layout, light and dark theme, mobile bottom navigation.
 
 ## Screenshots
 
-| Home feed | Space (anonymous) |
-|:-:|:-:|
-| ![Home](docs/screenshots/02-home.png) | ![Space](docs/screenshots/03-space.png) |
+<table>
+  <tr>
+    <td><img src="docs/screenshots/02-home.png" width="260" alt="Home feed"></td>
+    <td><img src="docs/screenshots/03-space.png" width="260" alt="Space"></td>
+    <td><img src="docs/screenshots/05-room-feed.png" width="260" alt="Room"></td>
+  </tr>
+  <tr>
+    <td align="center">Home</td>
+    <td align="center">Space</td>
+    <td align="center">Room</td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/08-echo-replies.png" width="260" alt="Echo with replies"></td>
+    <td><img src="docs/screenshots/09-leaderboard.png" width="260" alt="Pulse leaderboard"></td>
+    <td><img src="docs/screenshots/12-home-dark.png" width="260" alt="Dark mode"></td>
+  </tr>
+  <tr>
+    <td align="center">Replies</td>
+    <td align="center">Pulse leaderboard</td>
+    <td align="center">Dark mode</td>
+  </tr>
+</table>
 
-| Rooms | Room feed |
-|:-:|:-:|
-| ![Rooms](docs/screenshots/04-rooms.png) | ![Room feed](docs/screenshots/05-room-feed.png) |
+## Tech stack
 
-| Members (owner and admins only) | Manage: invites and invite link |
-|:-:|:-:|
-| ![Members](docs/screenshots/06-room-members.png) | ![Manage](docs/screenshots/07-room-manage.png) |
+| Layer | Choice |
+|---|---|
+| Framework | Next.js 15 (App Router) and React 19 |
+| Database | PostgreSQL with Prisma 7 |
+| Auth | JWT in an httpOnly cookie, bcrypt for passwords |
+| Email | Nodemailer (Gmail) for one-time codes |
+| Styling | Plain CSS with design tokens, no UI library |
 
-| Echo with replies | Pulse leaderboard |
-|:-:|:-:|
-| ![Echo](docs/screenshots/08-echo-replies.png) | ![Leaderboard](docs/screenshots/09-leaderboard.png) |
+## How it is built
 
-| Profile | Invitations inbox |
-|:-:|:-:|
-| ![Profile](docs/screenshots/10-profile.png) | ![Invitations](docs/screenshots/11-invitations.png) |
+Every request travels the same path, which keeps the code easy to follow:
 
-| Dark mode | Mobile |
-|:-:|:-:|
-| ![Dark mode](docs/screenshots/12-home-dark.png) | <img src="docs/screenshots/13-home-mobile.png" width="240" alt="Mobile home"> <img src="docs/screenshots/14-room-mobile.png" width="240" alt="Mobile room"> |
+```
+Page or component  →  api() helper  →  route handler  →  service  →  Prisma  →  PostgreSQL
+```
 
-## Run locally
+- **Pages** (`src/app`) only render and call `api()`.
+- **Route handlers** (`src/app/api/**/route.js`) check who is calling, read input and return JSON. A small `route()` wrapper handles login checks and errors.
+- **Services** (`src/services`) hold all the rules: who is allowed to do what, limits, notifications. Nothing in them knows about HTTP.
+- **Prisma** talks to the database, using transactions wherever several tables change together.
+
+```
+src/app/            pages and API routes
+src/components/     UI: forms, header, feed, echo card, room tools
+src/services/       business logic
+src/libs/           prisma, session, cookies, rate limiting, mail, helpers
+prisma/             schema, migrations, seed data
+scripts/            dev environment checker and end-to-end tests
+docs/               screenshots and demo
+```
+
+## Decisions I'm proud of
+
+- **Anonymity is enforced on the server.** Space echoes still store their author, so they can be edited or deleted, but the response layer removes it before anything leaves the server. The author of an anonymous reply is hidden the same way.
+- **Safer sessions.** The token lives in an httpOnly cookie and carries a fingerprint of the current password. Changing the password logs out every other device instantly.
+- **One-time codes are never stored in plain text.** Only a keyed hash travels in a signed cookie, with a limited number of attempts.
+- **No account guessing.** Login answers "Invalid credentials" whether the user or the password was wrong, and the forgot-password response is identical for registered and unknown emails.
+- **Rate limits on sensitive actions** such as signup, login, codes, invites and search.
+- **Fast pagination.** Lists ask for one extra row instead of running a count query, which is enough to know whether more pages exist.
+- **Room rules in one place.** All role checks (owner, admin, member) live in a single file, so a permission can't be forgotten in a route.
+
+## API overview
+
+About 45 routes, all returning JSON, with errors always shaped as `{ "error": "message" }`.
+
+| Area | Base path |
+|---|---|
+| Auth and sessions | `/api/auth/*` |
+| Users and profiles | `/api/users/*` |
+| Echoes, feeds, saved | `/api/echoes/*`, `/api/feed/*` |
+| Replies and reactions | `/api/comments/*`, `/api/engagement/*` |
+| Rooms, members, invites | `/api/rooms/*`, `/api/invites/*` |
+| Search | `/api/search/*` |
+| Notifications | `/api/notifications/*` |
+| Pulse and daily jobs | `/api/pulse/*` |
+| Health check | `/api/health` |
+
+## Run it locally
+
+You need Node 20.19 or newer and a PostgreSQL database.
 
 ```bash
 npm install
-cp .env.example .env        # then fill it in (see below)
-npm run setup               # apply migrations + seed rooms, sample writers and echoes
-npm run dev                 # http://localhost:3000
+cp .env.example .env     # fill in the values below
+npm run setup            # apply migrations and seed sample data
+npm run dev              # http://localhost:3000
 ```
 
-With `EMAIL_USER` and `EMAIL_PASS` empty, verification and reset codes are printed in the server console (development only).
+| Variable | Purpose |
+|---|---|
+| `DATABASE_URL` | PostgreSQL connection string |
+| `JWT_SECRET` | 32+ random characters, signs sessions and code cookies |
+| `EMAIL_USER`, `EMAIL_PASS` | Gmail address and App Password for sending codes |
+| `CRON_SECRET` | Protects the daily Pulse jobs |
+| `APP_TZ_OFFSET_MINUTES` | Minutes ahead of UTC that define a "day" (default 330) |
+| `NEXT_PUBLIC_SITE_URL` | Public site URL, used for share images |
 
-## Environment
+With `EMAIL_USER` and `EMAIL_PASS` empty, codes are printed in the server console during development.
 
-| Variable | Required | Purpose |
-|---|---|---|
-| `DATABASE_URL` | yes | PostgreSQL connection string |
-| `JWT_SECRET` | yes | 32+ random characters; signs sessions and OTP cookies |
-| `EMAIL_USER`, `EMAIL_PASS` | in production | Gmail address and App Password, used to send codes |
-| `CRON_SECRET` | for the daily jobs | Protects the two Pulse jobs |
-| `APP_TZ_OFFSET_MINUTES` | no | Minutes ahead of UTC that define a "day" (default 330) |
-| `NEXT_PUBLIC_SITE_URL` | recommended | Public URL, used for social-preview images |
-
-Generate a secret: `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"`
-
-The production server refuses to start if `DATABASE_URL` or `JWT_SECRET` is missing or weak.
-
-## Deploy on Vercel
-
-1. **Database:** create a free PostgreSQL database (Neon or Supabase) and copy its **pooled** connection string.
-2. **Create the tables once, from your computer:**
-   ```bash
-   DATABASE_URL="<your connection string>" npm run db:deploy
-   DATABASE_URL="<your connection string>" npm run db:seed
-   ```
-   Run `db:deploy` again whenever a new migration is added.
-3. **Import the project** in Vercel (framework: Next.js, defaults are fine) and add these environment variables: `DATABASE_URL`, `JWT_SECRET`, `EMAIL_USER`, `EMAIL_PASS`, `CRON_SECRET`, `NEXT_PUBLIC_SITE_URL` (your Vercel URL) and optionally `APP_TZ_OFFSET_MINUTES`.
-4. **Deploy.** `vercel.json` already schedules the two daily Pulse jobs, and Vercel authenticates them with `CRON_SECRET`.
-
-Any other Node 20.19+ host works too: `npm ci && npm run build && npm run db:deploy && npm start`.
-
-**Daily jobs** (`POST` or `GET`, header `Authorization: Bearer $CRON_SECRET`):
-
-- `/api/pulse/recalculate-daily` recomputes Pulse scores
-- `/api/pulse/check-streak` resets broken streaks and applies the 2% Pulse decay
-
-**Health check:** `GET /api/health` returns `{"status":"ok"}` (503 if the database is unreachable).
-
-Rate limits are kept in server memory, so on Vercel they apply per serverless instance. That is fine for a project of this size.
-
-## Room permissions
-
-| | Member | Admin | Owner |
-|---|:-:|:-:|:-:|
-| Read, post, reply | yes | yes | yes |
-| See the member list | | yes | yes |
-| Invite people / manage invite link | | yes | yes |
-| Remove regular members | | yes | yes |
-| Delete any echo or reply in the room | | yes | yes |
-| Rename the room, edit description | | yes | yes |
-| Promote / demote admins, remove admins | | | yes |
-| Make the room public/private, transfer, delete | | | yes |
-
-The owner is the room's creator (`Room.createdById`) and can hand the room to another member. The owner cannot leave until ownership is transferred.
-
-Room endpoints: `GET/PATCH/DELETE /api/rooms/:id`, `GET /api/rooms/:id/members`, `PATCH/DELETE /api/rooms/:id/members/:userId`, `POST /api/rooms/:id/transfer`, `GET/POST /api/rooms/:id/invites`, `DELETE /api/rooms/:id/invites/:inviteId`, `GET/POST/DELETE /api/rooms/:id/invite-link`, `GET /api/invites`, `PATCH /api/invites/:inviteId`, `GET/POST /api/invites/code/:code`, `GET /api/search/users`.
-
-Test the room features end to end (needs a running server and a development database): `npm run test:e2e`.
-
-## Structure
-
-```
-src/app/            pages and API routes (app/api/**/route.js)
-src/components/     UI (Ghost = the brand character, forms, header, feed…)
-src/services/       business logic used by the API routes
-src/libs/           prisma, auth/session, cookies, rate limiting, mail, helpers, route.js (auth + error wrapper for routes)
-prisma/             schema, migrations, seed
-public/brand/       ghost logo in three sizes
-scripts/doctor.mjs  dev environment checker (runs before `npm run dev`)
-```
-
-Design tokens (colours, radii, fonts) live at the top of `src/app/globals.css`, with a `:root[data-theme="dark"]` override.
+Other useful commands: `npm run db:seed` (re-run the sample data, safe to repeat), `npm run lint`, and `npm run test:e2e` (a script that exercises the room features against a running server and a development database).
 
 ## Author
 
-Built by **Naveen Kumar**: [GitHub](https://github.com/official-naveen) · [LinkedIn](https://www.linkedin.com/in/naveen-kumar-854737446)
+**Naveen Kumar**: [GitHub](https://github.com/official-naveen) · [LinkedIn](https://www.linkedin.com/in/naveen-kumar-854737446)
