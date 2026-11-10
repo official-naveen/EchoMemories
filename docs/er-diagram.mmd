@@ -1,0 +1,120 @@
+erDiagram
+  User ||--o{ Room : "createdBy"
+  User ||--o{ RoomMember : "user"
+  Room ||--o{ RoomMember : "room"
+  Room ||--o{ RoomInvite : "room"
+  User ||--o{ RoomInvite : "invitedUser"
+  User ||--o{ RoomInvite : "invitedBy"
+  User ||--o{ Echo : "author"
+  Room |o--o{ Echo : "room"
+  User ||--o{ Comment : "author"
+  Echo ||--o{ Comment : "echo"
+  Comment |o--o{ Comment : "parent"
+  User ||--o{ Resonation : "user"
+  Echo ||--o{ Resonation : "echo"
+  User ||--o{ Save : "user"
+  Echo ||--o{ Save : "echo"
+  Echo ||--o{ Mention : "echo"
+  User ||--o{ Mention : "mentionedUser"
+  User ||--o{ UserLog : "user"
+  User ||--o{ Notification : "user"
+
+  User {
+    string id PK
+    string fullName
+    string nickname "nullable"
+    string username UK
+    string avatar "nullable"
+    string email UK
+    string passwordHash
+    string bio "nullable"
+    string country "nullable"
+    datetime dateOfBirth "nullable"
+    float pulseScore
+    int streakDays
+    datetime lastActiveDate "nullable"
+    datetime createdAt
+    datetime updatedAt
+  }
+  Room {
+    string id PK
+    string name
+    string description "nullable"
+    boolean isPublic
+    string createdById FK
+    datetime createdAt
+    string rules "nullable"
+    boolean allowAnonymous
+    string inviteCode UK "nullable"
+    datetime inviteCodeExpiresAt "nullable"
+  }
+  RoomMember {
+    string id PK
+    string userId FK
+    string roomId FK
+    RoomRole role
+    datetime joinedAt
+  }
+  RoomInvite {
+    string id PK
+    string roomId FK
+    string invitedUserId FK
+    string invitedById FK
+    InviteStatus status
+    datetime createdAt
+    datetime respondedAt "nullable"
+  }
+  Echo {
+    string id PK
+    string title "nullable"
+    string content
+    string authorId FK
+    string roomId FK "nullable"
+    boolean isInSpace
+    boolean isAnonymous
+    datetime createdAt
+    datetime editedAt "nullable"
+  }
+  Comment {
+    string id PK
+    string content
+    string authorId FK
+    string echoId FK
+    string parentId FK "nullable"
+    boolean isAnonymous
+    datetime createdAt
+    datetime editedAt "nullable"
+  }
+  Resonation {
+    string id PK
+    string userId FK
+    string echoId FK
+    datetime createdAt
+  }
+  Save {
+    string id PK
+    string userId FK
+    string echoId FK
+    datetime createdAt
+  }
+  Mention {
+    string id PK
+    string echoId FK
+    string mentionedUserId FK
+    datetime createdAt
+  }
+  UserLog {
+    string id PK
+    string userId FK
+    string action
+    datetime createdAt
+  }
+  Notification {
+    string id PK
+    string userId FK
+    string message
+    string type
+    string link "nullable"
+    boolean isRead
+    datetime createdAt
+  }

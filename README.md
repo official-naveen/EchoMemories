@@ -2,47 +2,42 @@
 
 > Say it once. Let it echo.
 
-EchoMemories is a small social platform I built around one idea: a place to share thoughts without the pressure of performing. You post **echoes**, write anonymously in **Space**, gather in **EchoRooms**, and build a presence score called **Pulse** just by showing up.
+**Live site:** [echomemories-three.vercel.app](https://echomemories-three.vercel.app)
 
-I'm Naveen, a BA Hindi (Hons.) student who likes code as much as language. This project is where the two meet. I designed the product, the database, the API and the interface myself.
+EchoMemories is a small social app where you can share thoughts without feeling watched. You write short posts called **echoes**, post anonymously in **Space**, join communities called **EchoRooms**, and earn a presence score called **Pulse** just by showing up.
+
+I'm Naveen, a BA Hindi (Hons.) student learning full-stack development. This is my biggest project so far. It's an assignment and portfolio project, not a real business, and I've tried to be straight in this README about what works well and what doesn't.
 
 <p align="center">
   <img src="docs/demo.gif" width="640" alt="EchoMemories demo">
 </p>
 
-## What it does
+## What you can do
 
-- **Echoes:** short posts with an optional title. People can resonate (like), save, reply and @mention others.
-- **Space:** a public feed where every echo is anonymous. The server never sends the author's identity. Only the author sees their own post marked as theirs.
-- **EchoRooms:** public or private communities with their own feeds, roles (owner, admin, member), direct invites and shareable invite links.
-- **Pulse:** a presence score that grows when you post, reply and get mentioned. It rewards daily streaks, slowly decays when you disappear, and feeds a public leaderboard.
-- **Accounts:** email-verified signup with a one-time code, login with email or username, and password reset by emailed code.
-- **Notifications:** replies, mentions, invites and room events show up in one place.
-- **Feeds:** home (my rooms, trending, saved) and Space (latest, most discussed, most resonated).
-- **Design:** responsive layout, light and dark theme, mobile bottom navigation.
+- **Write echoes** with an optional title, edit them later, and reply to them. Replies can be answered too, so conversations form threads.
+- **Mention people** with `@username`. Name suggestions appear as you type.
+- **Resonate and save:** a like button and a bookmark.
+- **Post anonymously.** In Space you are anonymous by default and can switch to showing your name. In rooms you can choose to post anonymously, unless a room admin has turned that off.
+- **Join rooms**, public or private, with an owner, admins and members. Admins can write the room's rules, invite people directly or share an invite link.
+- **Build Pulse:** the score goes up when you post, reply and get mentioned, rewards daily streaks, slowly fades if you disappear, and feeds a leaderboard.
+- **Sign up safely** with an emailed one-time code, log in by email or username, and reset your password by code.
+- **Get notifications** for replies, mentions, invites and room events.
+- Scroll feeds endlessly, in light or dark theme, on desktop or phone.
 
 ## Screenshots
 
 <table>
   <tr>
-    <td><img src="docs/screenshots/02-home.png" width="260" alt="Home feed"></td>
-    <td><img src="docs/screenshots/03-space.png" width="260" alt="Space"></td>
-    <td><img src="docs/screenshots/05-room-feed.png" width="260" alt="Room"></td>
+    <td><img src="docs/screenshots/02-home.png" width="200" alt="Home feed"></td>
+    <td><img src="docs/screenshots/03-space.png" width="200" alt="Space"></td>
+    <td><img src="docs/screenshots/05-room-feed.png" width="200" alt="Room"></td>
+    <td><img src="docs/screenshots/08-echo-replies.png" width="200" alt="Replies"></td>
   </tr>
   <tr>
     <td align="center">Home</td>
     <td align="center">Space</td>
     <td align="center">Room</td>
-  </tr>
-  <tr>
-    <td><img src="docs/screenshots/08-echo-replies.png" width="260" alt="Echo with replies"></td>
-    <td><img src="docs/screenshots/09-leaderboard.png" width="260" alt="Pulse leaderboard"></td>
-    <td><img src="docs/screenshots/12-home-dark.png" width="260" alt="Dark mode"></td>
-  </tr>
-  <tr>
     <td align="center">Replies</td>
-    <td align="center">Pulse leaderboard</td>
-    <td align="center">Dark mode</td>
   </tr>
 </table>
 
@@ -51,59 +46,61 @@ I'm Naveen, a BA Hindi (Hons.) student who likes code as much as language. This 
 | Layer | Choice |
 |---|---|
 | Framework | Next.js 15 (App Router) and React 19 |
-| Database | PostgreSQL with Prisma 7 |
+| Database | PostgreSQL (Neon) with Prisma 7 |
 | Auth | JWT in an httpOnly cookie, bcrypt for passwords |
-| Email | Nodemailer (Gmail) for one-time codes |
-| Styling | Plain CSS with design tokens, no UI library |
+| Email | Nodemailer with Gmail for one-time codes |
+| Hosting | Vercel, with two daily cron jobs for Pulse |
+| Styling | Plain CSS, no UI library |
 
 ## How it is built
 
-Every request travels the same path, which keeps the code easy to follow:
+Every request follows the same path:
 
 ```
 Page or component  →  api() helper  →  route handler  →  service  →  Prisma  →  PostgreSQL
 ```
 
-- **Pages** (`src/app`) only render and call `api()`.
-- **Route handlers** (`src/app/api/**/route.js`) check who is calling, read input and return JSON. A small `route()` wrapper handles login checks and errors.
-- **Services** (`src/services`) hold all the rules: who is allowed to do what, limits, notifications. Nothing in them knows about HTTP.
-- **Prisma** talks to the database, using transactions wherever several tables change together.
+- **Pages** (`src/app`) render the interface and call the API.
+- **Route handlers** (`src/app/api`) check who is calling and return JSON.
+- **Services** (`src/services`) hold the rules: who may do what, limits, notifications.
+- **Prisma** talks to the database and uses transactions when several tables change together.
 
-```
-src/app/            pages and API routes
-src/components/     UI: forms, header, feed, echo card, room tools
-src/services/       business logic
-src/libs/           prisma, session, cookies, rate limiting, mail, helpers
-prisma/             schema, migrations, seed data
-scripts/            dev environment checker and end-to-end tests
-docs/               screenshots and demo
-```
+About 46 routes. Errors always look like `{ "error": "message" }`.
 
-## Decisions I'm proud of
+## Database
 
-- **Anonymity is enforced on the server.** Space echoes still store their author, so they can be edited or deleted, but the response layer removes it before anything leaves the server. The author of an anonymous reply is hidden the same way.
-- **Safer sessions.** The token lives in an httpOnly cookie and carries a fingerprint of the current password. Changing the password logs out every other device instantly.
-- **One-time codes are never stored in plain text.** Only a keyed hash travels in a signed cookie, with a limited number of attempts.
-- **No account guessing.** Login answers "Invalid credentials" whether the user or the password was wrong, and the forgot-password response is identical for registered and unknown emails.
-- **Rate limits on sensitive actions** such as signup, login, codes, invites and search.
-- **Fast pagination.** Lists ask for one extra row instead of running a count query, which is enough to know whether more pages exist.
-- **Room rules in one place.** All role checks (owner, admin, member) live in a single file, so a permission can't be forgotten in a route.
+11 tables. An echo with no room belongs to Space. A reply can point at another reply through `parentId`, which is how threads work. Anonymity is a flag on the echo or reply: the author is still stored, and the server removes it from the response.
 
-## API overview
+Every table with every column (PK = primary key, FK = foreign key, UK = unique). Click the image to zoom. It is generated from `prisma/schema.prisma` by `node scripts/er-diagram.mjs`, so it matches the real database.
 
-About 45 routes, all returning JSON, with errors always shaped as `{ "error": "message" }`.
+<a href="docs/er-diagram.png"><img src="docs/er-diagram.png" alt="EchoMemories database diagram"></a>
 
-| Area | Base path |
-|---|---|
-| Auth and sessions | `/api/auth/*` |
-| Users and profiles | `/api/users/*` |
-| Echoes, feeds, saved | `/api/echoes/*`, `/api/feed/*` |
-| Replies and reactions | `/api/comments/*`, `/api/engagement/*` |
-| Rooms, members, invites | `/api/rooms/*`, `/api/invites/*` |
-| Search | `/api/search/*` |
-| Notifications | `/api/notifications/*` |
-| Pulse and daily jobs | `/api/pulse/*` |
-| Health check | `/api/health` |
+## Decisions I'm happy with
+
+- **Anonymity is decided on the server.** The browser never receives the author of an anonymous echo or reply, so it can't be found by inspecting the page. Even a room admin can't see it.
+- **Changing your password logs out every other device**, because the session token carries a fingerprint of the current password.
+- **One-time codes are never stored in plain text.** Only a keyed hash is kept, with a limited number of attempts.
+- **Login doesn't reveal whether an account exists.** Wrong user and wrong password give the same answer.
+- **All room permissions live in one file** (`roomAccess.js`), so a route can't forget a check.
+- **Pagination without counting.** Each list asks for one extra row to know whether another page exists.
+
+## Honest limitations
+
+- **Moderation is manual.** Room owners and admins can delete posts and remove members. There is no report button, no word filter, no mutes or bans, and a removed person can rejoin a public room. Admins also can't act on a person behind an anonymous post, because they can't see who it is.
+- **Anonymity is only as strong as the database.** The author is stored so posts can be edited and deleted. Anyone with database access could see who wrote what.
+- **The rate limiter lives in memory.** On Vercel each server instance keeps its own counters, so limits are approximate. A real deployment would use Redis.
+- **Email goes through a personal Gmail account**, which has daily sending limits.
+- **No image uploads and no real-time updates.** New content appears when you load or scroll the page, not live.
+- **Testing is end-to-end scripts only** (about 130 checks in `scripts/`). There are no unit tests and no automatic CI yet.
+- **It runs on free tiers**, so the first request after a quiet period can be slow. I haven't load-tested it.
+- **The sample data is seeded**, so the busy-looking rooms in the demo are not real users.
+
+## What I would do next
+
+1. A report button and a simple review list for room admins.
+2. Move the rate limiter to Redis.
+3. Add unit tests and run the end-to-end checks automatically on every push.
+4. Image uploads for avatars.
 
 ## Run it locally
 
@@ -127,7 +124,11 @@ npm run dev              # http://localhost:3000
 
 With `EMAIL_USER` and `EMAIL_PASS` empty, codes are printed in the server console during development.
 
-Other useful commands: `npm run db:seed` (re-run the sample data, safe to repeat), `npm run lint`, and `npm run test:e2e` (a script that exercises the room features against a running server and a development database).
+Useful commands: `npm run db:seed` (safe to repeat), `npm run lint`, `npm run test:e2e` (needs a running server and a development database).
+
+## About how I built it
+
+I used Claude, an AI assistant, to help write and review code while I decided what to build, tested it, and deployed it. I'm still learning, and I can walk through the parts above in detail.
 
 ## Author
 
