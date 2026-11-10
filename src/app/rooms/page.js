@@ -45,7 +45,7 @@ export default function Rooms() {
   const [rooms, setRooms] = useState([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
-  const [form, setForm] = useState({ name: "", description: "", isPublic: true })
+  const [form, setForm] = useState({ name: "", description: "", rules: "", allowAnonymous: true, isPublic: true })
   const [error, setError] = useState("")
   const [creating, setCreating] = useState(false)
   const [inviteCount, setInviteCount] = useState(0)
@@ -123,6 +123,11 @@ export default function Rooms() {
         <form className="card stack" onSubmit={create}>
           <input className="input" aria-label="Room name" placeholder="Room name" required minLength={3} maxLength={40} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
           <input className="input" aria-label="Description" placeholder="What is this room about? (optional)" maxLength={200} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+          <textarea className="input" aria-label="Room rules" placeholder="Room rules (optional), one per line" rows={4} maxLength={1000} value={form.rules} onChange={(e) => setForm({ ...form, rules: e.target.value })} />
+          <label className="check">
+            <input type="checkbox" checked={form.allowAnonymous} onChange={(e) => setForm({ ...form, allowAnonymous: e.target.checked })} />
+            Allow anonymous posts and replies
+          </label>
           <label className="check">
             <input type="checkbox" checked={!form.isPublic} onChange={(e) => setForm({ ...form, isPublic: !e.target.checked })} />
             Private room (only members can see it. You can invite people after creating it)

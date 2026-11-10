@@ -43,14 +43,14 @@ export default function Profile({ params }) {
         <div className="stat"><strong>{user._count.roomMemberships}</strong><span>Rooms</span></div>
       </div>
 
-      <h2 className="section-title" style={{ marginBottom: 4 }}>Room echoes</h2>
-      <p className="muted" style={{ marginBottom: 12 }}>Echoes in Space are anonymous and never appear on profiles.</p>
-      {user.echoes.length === 0 && <Empty title="No public room echoes yet" mascot="empty-posts">When {user.fullName.split(" ")[0]} posts in a public room, it will show up here.</Empty>}
+      <h2 className="section-title" style={{ marginBottom: 4 }}>Echoes</h2>
+      <p className="muted" style={{ marginBottom: 12 }}>Only echoes posted under their name appear here. Anonymous echoes never do.</p>
+      {user.echoes.length === 0 && <Empty title="No public echoes yet" mascot="empty-posts">When {user.fullName.split(" ")[0]} posts under their name, it will show up here.</Empty>}
       {user.echoes.map((e) => (
         <article key={e.id} className="card hoverable">
           <div className="echo-head" style={{ marginBottom: 8 }}>
             <div className="meta muted" style={{ display: "flex", gap: 8, alignItems: "center" }}>
-              <span>{timeAgo(e.createdAt)}</span><Link className="chip" href={`/rooms/${e.room.id}`}>{e.room.name}</Link>
+              <span>{timeAgo(e.createdAt)}</span>{e.room ? <Link className="chip" href={`/rooms/${e.room.id}`}>{e.room.name}</Link> : <Link className="chip quiet" href="/space">Space</Link>}
             </div>
           </div>
           {e.title && <h3 className="echo-title"><Link href={`/echo/${e.id}`}>{e.title}</Link></h3>}

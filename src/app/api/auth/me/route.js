@@ -9,7 +9,7 @@ export async function GET(req) {
       country: true,
       roomMemberships: {
         orderBy: { joinedAt: "desc" },
-        select: { room: { select: { id: true, name: true, description: true } } },
+        select: { room: { select: { id: true, name: true, description: true, allowAnonymous: true } } },
       },
     })
 

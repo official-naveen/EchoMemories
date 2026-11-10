@@ -7,11 +7,15 @@ import { useToast } from "@/components/Toast";
 import { api } from "@/libs/api";
 import Avatar from "@/components/Avatar";
 import Icon from "@/components/Icon";
+import MentionTextarea from "@/components/MentionTextarea";
 
 // Writes a new echo. `fixedRoomId` locks the destination (room pages).
+// Space echoes are anonymous unless you untick the box; room echoes show your
+// name unless you tick it (and only when the room allows anonymous posts).
 export default function Composer({
   onPosted,
   fixedRoomId = null,
+  fixedRoomAllowsAnonymous = true,
   defaultSpace = false,
 }) {
   const { me } = useAuth();
@@ -20,6 +24,7 @@ export default function Composer({
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [dest, setDest] = useState(fixedRoomId || "space");
+  const [anonymous, setAnonymous] = useState(!fixedRoomId);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const area = useRef(null);
@@ -40,6 +45,13 @@ export default function Composer({
   }
 
   const rooms = (me.roomMemberships || []).map((m) => m.room);
+  const inSpace = dest === "space";
+  const canBeAnonymous = inSpace || (fixedRoomId ? fixedRoomAllowsAnonymous : rooms.find((r) => r.id === dest)?.allowAnonymous !== false);
+
+  function chooseDest(value) {
+    setDest(value);
+    setAnonymous(value === "space"); // Space starts anonymous, rooms start named
+  }
 
   async function submit(e) {
     e?.preventDefault();
@@ -49,12 +61,12 @@ export default function Composer({
     try {
       const data = await api("/api/echoes", {
         method: "POST",
-        body: { title, content, roomId: dest === "space" ? null : dest },
+        body: { title, content, roomId: inSpace ? null : dest, anonymous: canBeAnonymous && anonymous },
       });
       setTitle("");
       setContent("");
       setOpen(false);
-      toast(dest === "space" ? "Sent into Space, anonymously" : "Echo posted");
+      toast(data.echo.isAnonymous ? "Posted anonymously" : "Echo posted");
       onPosted?.(data.echo);
     } catch (err) {
       setError(err.message);
@@ -84,7 +96,7 @@ export default function Composer({
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
-          <textarea
+          <MentionTextarea
             ref={area}
             className="bare body"
             aria-label="Your echo"
@@ -92,7 +104,7 @@ export default function Composer({
             maxLength={5000}
             required
             value={content}
-            onChange={(e) => setContent(e.target.value)}
+            onChange={setContent}
             onKeyDown={(e) =>
               (e.metaKey || e.ctrlKey) && e.key === "Enter" && submit()
             }
@@ -112,16 +124,22 @@ export default function Composer({
                 <Icon name={dest === "space" ? "space" : "rooms"} />
                 <select
                   value={dest}
-                  onChange={(e) => setDest(e.target.value)}
+                  onChange={(e) => chooseDest(e.target.value)}
                   aria-label="Post to"
                 >
-                  <option value="space">Space (anonymous)</option>
+                  <option value="space">Space</option>
                   {rooms.map((r) => (
                     <option key={r.id} value={r.id}>
                       {r.name}
                     </option>
                   ))}
                 </select>
+              </label>
+            )}
+            {canBeAnonymous && (
+              <label className="check">
+                <input type="checkbox" checked={anonymous} onChange={(e) => setAnonymous(e.target.checked)} />
+                {anonymous ? "Anonymous: your name stays hidden" : "Posting under your name"}
               </label>
             )}
             <div className="row">

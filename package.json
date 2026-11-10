@@ -16,7 +16,7 @@
     "db:seed": "node prisma/seed.mjs",
     "setup": "node scripts/doctor.mjs --no-db && prisma generate && prisma migrate deploy && node prisma/seed.mjs",
     "doctor": "node scripts/doctor.mjs",
-    "test:e2e": "node scripts/e2e-rooms.mjs"
+    "test:e2e": "node scripts/e2e-rooms.mjs && node scripts/e2e-echoes.mjs"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.10.1",

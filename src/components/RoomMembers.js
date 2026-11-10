@@ -8,6 +8,7 @@ import Avatar from "@/components/Avatar"
 import Icon from "@/components/Icon"
 import Empty, { Skeletons } from "@/components/Empty"
 import ConfirmButton from "@/components/ConfirmButton"
+import InfiniteSentinel from "@/components/InfiniteSentinel"
 
 function RoleChip({ role }) {
   if (role === "OWNER") return <span className="chip owner"><Icon name="crown" /> Owner</span>
@@ -128,11 +129,7 @@ export default function RoomMembers({ roomId, onChanged }) {
         )
       })}
 
-      {!loading && hasMore && (
-        <div className="row" style={{ justifyContent: "center", marginTop: 12 }}>
-          <button className="btn" onClick={() => load(page + 1, false)}>Load more</button>
-        </div>
-      )}
+      {hasMore && !error && <InfiniteSentinel loading={loading} onVisible={() => load(page + 1, false)} />}
     </div>
   )
 }

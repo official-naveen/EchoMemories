@@ -9,6 +9,8 @@ const PATHS = {
   ripple: <><circle cx="12" cy="12" r="2" /><circle cx="12" cy="12" r="5.5" opacity=".7" /><circle cx="12" cy="12" r="9" opacity=".4" /></>,
   trash: <path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />,
   plus: <path d="M12 5v14M5 12h14" />,
+  edit: <path d="M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4" />,
+  reply: <path d="M10 8 4 13l6 5v-3.5c5 0 8 1 10 4-.5-5-3.5-8.5-10-8.5z" />,
   user: <><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></>,
   logout: <path d="M9 4H5v16h4M16 8l4 4-4 4M20 12H9" />,
   lock: <><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></>,

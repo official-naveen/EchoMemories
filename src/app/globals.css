@@ -485,3 +485,27 @@ textarea.input { resize: vertical; min-height: 92px; line-height: 1.6; }
 .invite-card .grow { flex: 1; min-width: 200px; }
 .invite-card .acts { display: flex; gap: 8px; }
 .tab .count { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; margin-left: 6px; border-radius: 99px; background: var(--brand); color: var(--on-brand); font-size: 0.7rem; font-weight: 700; }
+
+/* --- @mention suggestions --- */
+.mention-box { position: relative; }
+.mention-list { position: absolute; left: 0; top: 100%; z-index: 30; width: min(320px, 100%); margin: 4px 0 0; padding: 4px; list-style: none; background: var(--surface); border: 1px solid var(--line-strong); border-radius: var(--r-md); box-shadow: var(--shadow-pop); }
+.mention-list button { display: flex; align-items: center; gap: 10px; width: 100%; padding: 7px 8px; border-radius: var(--r-sm); text-align: left; }
+.mention-list button:hover, .mention-list button.on { background: var(--brand-soft); }
+.mention-list .who { display: grid; line-height: 1.25; min-width: 0; }
+.mention-list .who span { color: var(--text-3); font-size: 0.8rem; }
+
+/* --- anonymity, edits, threads --- */
+.check { display: inline-flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--text-2); cursor: pointer; }
+.check input { width: 16px; height: 16px; accent-color: var(--brand); }
+.edited { color: var(--text-3); font-size: 0.75rem; }
+.chip.anon { background: var(--surface-2); color: var(--text-2); }
+.thread { display: grid; gap: 10px; }
+.thread .thread { margin-left: 18px; padding-left: 14px; border-left: 2px solid var(--line); }
+.thread .thread.flat { margin-left: 0; }
+.reply-form { display: grid; gap: 8px; margin-top: 10px; }
+.reply-form .bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.rules-box { white-space: pre-wrap; line-height: 1.6; }
+
+/* Infinite scroll */
+.more-loader { display: flex; justify-content: center; align-items: center; min-height: 48px; margin-top: 12px; }
+.more-loader .spinner { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--border, currentColor); border-top-color: var(--accent, currentColor); animation: spin 0.7s linear infinite; }

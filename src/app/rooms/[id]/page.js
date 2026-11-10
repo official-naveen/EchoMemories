@@ -99,6 +99,7 @@ export default function RoomPage({ params }) {
         onChange={setView}
         tabs={[
           { value: "echoes", label: "Echoes" },
+          { value: "rules", label: "Rules" },
           ...(room.isAdmin
             ? [
                 { value: "members", label: `Members (${room.memberCount})` },
@@ -110,7 +111,7 @@ export default function RoomPage({ params }) {
 
       {view === "echoes" && (
         <>
-          {room.joined && <Composer fixedRoomId={room.id} onPosted={() => { setSort("latest"); setKey((k) => k + 1) }} />}
+          {room.joined && <Composer fixedRoomId={room.id} fixedRoomAllowsAnonymous={room.allowAnonymous} onPosted={() => { setSort("latest"); setKey((k) => k + 1) }} />}
           <div className="row spread" style={{ marginBottom: 6 }}>
             <span className="muted">Sort by</span>
             <select className="input select-sm" style={{ marginBottom: 0 }} aria-label="Sort echoes" value={sort} onChange={(e) => setSort(e.target.value)}>
@@ -123,6 +124,18 @@ export default function RoomPage({ params }) {
         </>
       )}
 
+      {view === "rules" && (
+        <section className="card stack">
+          <h2 className="section-title" style={{ margin: 0 }}>Room rules</h2>
+          {room.rules ? (
+            <p className="rules-box">{room.rules}</p>
+          ) : (
+            <p className="muted">The admins haven&apos;t written any rules yet. Be kind and stay on topic.</p>
+          )}
+          <p className="muted">{room.allowAnonymous ? "Members may post and reply anonymously here." : "Anonymous posts and replies are turned off in this room."}</p>
+          {room.isAdmin && <button className="btn small" style={{ justifySelf: "start" }} onClick={() => setView("manage")}>Edit rules</button>}
+        </section>
+      )}
       {view === "members" && room.isAdmin && <RoomMembers roomId={room.id} onChanged={loadRoom} />}
       {view === "manage" && room.isAdmin && <RoomManage room={room} onChanged={loadRoom} />}
     </Shell>

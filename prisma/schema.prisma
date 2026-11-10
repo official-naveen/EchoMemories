@@ -81,6 +81,10 @@ model Room {
 
   createdAt   DateTime @default(now())
 
+  // Written by the owner/admins and shown to everyone who can see the room.
+  rules          String?
+  allowAnonymous Boolean @default(true)
+
   // Shareable join link: /invite/<inviteCode>. null = no active link.
   inviteCode          String?   @unique
   inviteCodeExpiresAt DateTime?
@@ -153,7 +157,12 @@ model Echo {
 
   isInSpace Boolean  @default(false)
 
-  createdAt DateTime @default(now())
+  // Hides the author in every response. Space echoes default to true (the
+  // author can choose to show their name); room echoes default to false.
+  isAnonymous Boolean @default(false)
+
+  createdAt DateTime  @default(now())
+  editedAt  DateTime?
 
   comments      Comment[]
   resonations   Resonation[]
@@ -178,10 +187,19 @@ model Comment {
   echo      Echo     @relation(fields: [echoId], references: [id])
   echoId    String
 
-  createdAt DateTime @default(now())
+  // Reply to another reply (same echo). null = top-level reply.
+  parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  parentId  String?
+  replies   Comment[] @relation("CommentReplies")
+
+  isAnonymous Boolean @default(false)
+
+  createdAt DateTime  @default(now())
+  editedAt  DateTime?
 
   @@index([echoId])
   @@index([authorId])
+  @@index([parentId])
 }
 
 

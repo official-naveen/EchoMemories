@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { api } from "@/libs/api"
 import EchoCard from "@/components/EchoCard"
 import Empty, { Skeletons } from "@/components/Empty"
+import InfiniteSentinel from "@/components/InfiniteSentinel"
 
 // Paginated list of echoes. `url` may already contain a query string.
 // Change `reloadKey` to force a refetch (e.g. after posting).
@@ -50,15 +51,11 @@ export default function FeedList({ url, reloadKey = 0, empty = "Nothing here yet
       {error && (
         <Empty title="Couldn’t load echoes" mascot="error">
           {error}
-          <div><button className="btn" onClick={() => load(1, true)}>Try again</button></div>
+          <div><button className="btn" onClick={() => load(echoes.length ? page : 1, !echoes.length)}>Try again</button></div>
         </Empty>
       )}
       {!loading && !error && echoes.length === 0 && <Empty title="Nothing here yet" mascot="empty-posts">{empty}</Empty>}
-      {!loading && hasMore && (
-        <div className="row" style={{ justifyContent: "center", marginTop: 16 }}>
-          <button className="btn" onClick={() => load(page + 1, false)}>Load more</button>
-        </div>
-      )}
+      {hasMore && !error && <InfiniteSentinel loading={loading} onVisible={() => load(page + 1, false)} />}
     </div>
   )
 }

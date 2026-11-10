@@ -8,16 +8,19 @@ export const ECHO_SELECT = {
   content: true,
   createdAt: true,
   isInSpace: true,
+  isAnonymous: true,
+  editedAt: true,
   authorId: true,
   author: {
     select: { id: true, username: true, fullName: true, avatar: true, pulseScore: true },
   },
-  room: { select: { id: true, name: true, isPublic: true } },
+  room: { select: { id: true, name: true, isPublic: true, allowAnonymous: true } },
   _count: { select: { comments: true, resonations: true, saves: true } },
 }
 
 // Public-facing echo object.
-// - Space echoes are anonymous: the author is hidden (only `isMine` tells the owner).
+// - Anonymous echoes (the default in Space, optional in rooms) hide the author;
+//   only `isMine` tells the owner.
 // - viewer state (resonated / saved) is attached when a user is known.
 export async function decorateEchoes(rows, viewerId) {
   let resonated = new Set()
@@ -45,10 +48,12 @@ export async function decorateEchoes(rows, viewerId) {
     content: e.content,
     createdAt: e.createdAt,
     isInSpace: e.isInSpace,
+    isAnonymous: e.isAnonymous,
+    editedAt: e.editedAt,
     isMine: !!viewerId && e.authorId === viewerId,
     canModerate: !!e.room && adminRooms.has(e.room.id), // room admins may delete echoes/replies here
-    author: e.isInSpace ? null : e.author,
-    room: e.room ? { id: e.room.id, name: e.room.name } : null,
+    author: e.isAnonymous ? null : e.author,
+    room: e.room ? { id: e.room.id, name: e.room.name, allowAnonymous: e.room.allowAnonymous } : null,
     counts: e._count,
     viewer: { resonated: resonated.has(e.id), saved: saved.has(e.id) },
   }))
@@ -71,7 +76,7 @@ export async function loadViewableEcho(echoId, viewerId, select = ECHO_SELECT) {
 
   const echo = await prisma.echo.findUnique({
     where: { id: echoId },
-    select: { ...select, room: { select: { id: true, name: true, isPublic: true, createdById: true } } },
+    select: { ...select, room: { select: { id: true, name: true, isPublic: true, createdById: true, allowAnonymous: true } } },
   })
   if (!echo) throw httpError(404, "Echo not found")
 

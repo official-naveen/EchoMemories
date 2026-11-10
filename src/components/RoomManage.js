@@ -179,7 +179,7 @@ function PendingInvites({ room, reloadKey }) {
 /* ---------- name / description / visibility ---------- */
 function Settings({ room, onSaved }) {
   const toast = useToast()
-  const [form, setForm] = useState({ name: room.name, description: room.description || "", isPublic: room.isPublic })
+  const [form, setForm] = useState({ name: room.name, description: room.description || "", isPublic: room.isPublic, rules: room.rules || "", allowAnonymous: room.allowAnonymous })
   const [error, setError] = useState("")
   const [busy, setBusy] = useState(false)
 
@@ -188,7 +188,7 @@ function Settings({ room, onSaved }) {
     setError("")
     setBusy(true)
     try {
-      const body = { name: form.name, description: form.description }
+      const body = { name: form.name, description: form.description, rules: form.rules, allowAnonymous: form.allowAnonymous }
       if (room.isOwner) body.isPublic = form.isPublic
       await api(`/api/rooms/${room.id}`, { method: "PATCH", body })
       toast("Room updated")
@@ -206,6 +206,11 @@ function Settings({ room, onSaved }) {
       <form className="card stack" onSubmit={save}>
         <input className="input" aria-label="Room name" required minLength={3} maxLength={40} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
         <input className="input" aria-label="Description" placeholder="What is this room about? (optional)" maxLength={200} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+        <textarea className="input" aria-label="Room rules" placeholder={"Room rules (optional), one per line. For example:\n1. Be kind.\n2. Stay on topic.\n3. No spam."} rows={6} maxLength={1000} value={form.rules} onChange={(e) => setForm({ ...form, rules: e.target.value })} />
+        <label className="check">
+          <input type="checkbox" checked={form.allowAnonymous} onChange={(e) => setForm({ ...form, allowAnonymous: e.target.checked })} />
+          Allow anonymous posts and replies in this room
+        </label>
         {room.isOwner ? (
           <label className="check">
             <input type="checkbox" checked={!form.isPublic} onChange={(e) => setForm({ ...form, isPublic: !e.target.checked })} />

@@ -8,6 +8,8 @@ const ROOM_SELECT = {
   name: true,
   description: true,
   isPublic: true,
+  rules: true,
+  allowAnonymous: true,
   createdAt: true,
   createdBy: { select: { id: true, username: true, fullName: true } },
   _count: { select: { members: true, echoes: true } },
@@ -22,6 +24,8 @@ function shape(room, roles, viewerId) {
     name: room.name,
     description: room.description,
     isPublic: room.isPublic,
+    rules: room.rules,
+    allowAnonymous: room.allowAnonymous,
     createdAt: room.createdAt,
     createdBy: room.createdBy,
     memberCount: room._count.members,
@@ -54,6 +58,15 @@ function cleanRoomFields(body, { partial = false } = {}) {
     if (description.length > 200) throw httpError(400, "Description must be 200 characters or less")
     out.description = description || null
   }
+  if (!partial || body.rules !== undefined) {
+    const rules = typeof body.rules === "string" ? body.rules.trim() : ""
+    if (rules.length > 1000) throw httpError(400, "Rules must be 1000 characters or less")
+    out.rules = rules || null
+  }
+  if (body.allowAnonymous !== undefined) {
+    if (typeof body.allowAnonymous !== "boolean") throw httpError(400, "allowAnonymous must be true or false")
+    out.allowAnonymous = body.allowAnonymous
+  }
   if (body.isPublic !== undefined) {
     if (typeof body.isPublic !== "boolean") throw httpError(400, "isPublic must be true or false")
     out.isPublic = body.isPublic
@@ -70,7 +83,7 @@ async function assertPublicNameFree(name, exceptId) {
 }
 
 export async function createRoom(userId, body = {}) {
-  const { name, description } = cleanRoomFields(body)
+  const { name, description, rules, allowAnonymous } = cleanRoomFields(body)
   const isPublic = body.isPublic === false ? false : true
 
   if (isPublic) await assertPublicNameFree(name)
@@ -80,6 +93,8 @@ export async function createRoom(userId, body = {}) {
     data: {
       name,
       description,
+      rules,
+      allowAnonymous: allowAnonymous ?? true,
       isPublic,
       createdById: userId,
       members: { create: { userId, role: "ADMIN" } },

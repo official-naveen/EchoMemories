@@ -64,6 +64,13 @@ export default function InvitePage({ params }) {
         <h1 className="page-title" style={{ margin: 0 }}>{room.name} {!room.isPublic && <Icon name="lock" />}</h1>
         {room.description && <p>{room.description}</p>}
         <p className="muted">{room.memberCount} members · created by @{room.createdBy.username}</p>
+        {room.rules && (
+          <div className="stack" style={{ textAlign: "left" }}>
+            <strong>Room rules</strong>
+            <p className="rules-box">{room.rules}</p>
+            <p className="muted">By joining you agree to follow these rules.</p>
+          </div>
+        )}
 
         {alreadyMember ? (
           <Link href={`/rooms/${room.id}`} className="btn primary big">Open room</Link>

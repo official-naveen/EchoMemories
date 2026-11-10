@@ -15,22 +15,36 @@ function clean(body = {}) {
   return { content, title: title || null }
 }
 
-async function notifyMentions({ echo, authorId, authorName, isSpace, roomName }) {
+// Anonymous echoes never reveal the author's name, not even in notifications.
+// People who were already mentioned (earlier version of an edited echo) are skipped.
+async function notifyMentions({ echo, authorId, authorName, anonymous, roomName }) {
   const names = extractMentions(echo.content)
   if (!names.length) return
 
-  const users = await prisma.user.findMany({
-    where: { username: { in: names }, id: { not: authorId } },
-    select: { id: true },
-  })
+  const [users, already] = await Promise.all([
+    prisma.user.findMany({ where: { username: { in: names }, id: { not: authorId } }, select: { id: true } }),
+    prisma.mention.findMany({ where: { echoId: echo.id }, select: { mentionedUserId: true } }),
+  ])
+  const seen = new Set(already.map((m) => m.mentionedUserId))
 
   for (const u of users) {
+    if (seen.has(u.id)) continue
     await prisma.mention.create({ data: { echoId: echo.id, mentionedUserId: u.id } })
-    const who = isSpace ? "Someone" : authorName
-    const where = isSpace ? "in Space" : `in ${roomName}`
+    const who = anonymous ? "Someone" : authorName
+    const where = roomName ? `in ${roomName}` : "in Space"
     await createNotification(u.id, `${who} mentioned you ${where}`, { type: "mention", link: `/echo/${echo.id}` })
     await bumpPulse(u.id, 0.2)
   }
+}
+
+// Space echoes are anonymous unless the author chooses to show their name;
+// room echoes show the name unless the author chooses to hide it.
+function resolveAnonymous(body, room) {
+  const anonymous = typeof body.anonymous === "boolean" ? body.anonymous : !room
+  if (anonymous && room && room.allowAnonymous === false) {
+    throw httpError(400, "This room doesn't allow anonymous posts")
+  }
+  return anonymous
 }
 
 export async function createEcho(userId, body) {
@@ -49,8 +63,10 @@ export async function createEcho(userId, body) {
     if (!isMember && room.createdById !== userId) throw httpError(403, "Join this room before posting")
   }
 
+  const anonymous = resolveAnonymous(body, room)
+
   const created = await prisma.echo.create({
-    data: { title, content, authorId: userId, roomId: room ? room.id : null, isInSpace: !room },
+    data: { title, content, authorId: userId, roomId: room ? room.id : null, isInSpace: !room, isAnonymous: anonymous },
     select: { id: true, content: true },
   })
 
@@ -59,7 +75,7 @@ export async function createEcho(userId, body) {
     echo: created,
     authorId: userId,
     authorName: author?.fullName || "Someone",
-    isSpace: !room,
+    anonymous,
     roomName: room?.name,
   })
   await bumpPulse(userId, 0.5)
@@ -75,12 +91,27 @@ export async function getEchoById(id, viewerId) {
 }
 
 export async function updateEcho(userId, id, body) {
-  const echo = await prisma.echo.findUnique({ where: { id }, select: { authorId: true } })
+  const echo = await prisma.echo.findUnique({
+    where: { id },
+    select: { authorId: true, isAnonymous: true, content: true, title: true, room: { select: { name: true } } },
+  })
   if (!echo) throw httpError(404, "Echo not found")
   if (echo.authorId !== userId) throw httpError(403, "You can only edit your own echoes")
 
   const { content, title } = clean({ title: body.title, content: body.content })
-  await prisma.echo.update({ where: { id }, data: { content, title } })
+  if (content === echo.content && title === echo.title) return getEchoById(id, userId)
+
+  await prisma.echo.update({ where: { id }, data: { content, title, editedAt: new Date() } })
+
+  // Newly added @mentions are notified; people mentioned before are not pinged again.
+  const author = await prisma.user.findUnique({ where: { id: userId }, select: { fullName: true } })
+  await notifyMentions({
+    echo: { id, content },
+    authorId: userId,
+    authorName: author?.fullName || "Someone",
+    anonymous: echo.isAnonymous,
+    roomName: echo.room?.name,
+  })
   return getEchoById(id, userId)
 }
 

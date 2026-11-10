@@ -52,6 +52,18 @@ export const WRITERS = [
   ["manav_malhotra", "Manav Malhotra", "Reads the last page first.", 3.5, 1],
 ]
 
+// Shown in every starter room; Mental Wellness adds one extra line.
+export const DEFAULT_RULES = [
+  "1. Be kind. Disagree with ideas, never with people.",
+  "2. Stay on topic for this room.",
+  "3. No spam, ads or hate.",
+  "4. Keep other people's stories private.",
+].join("\n")
+
+export const EXTRA_RULES = {
+  "Mental Wellness": "5. This is peer support, not professional advice. If you are in crisis, please contact a local helpline.",
+}
+
 const POE = "Poetry & Verse"
 const HIN = "Hindi Sahitya"
 const LATE = "Late Night Thoughts"
@@ -96,8 +108,8 @@ const RAW = [
   // ---------- Late Night Thoughts ----------
   [LATE, "vihaan_gupta", "2:13 AM", "Funny how the problems that felt enormous at midnight look like small, reasonable errands by breakfast.", [["aarav_sharma", "Midnight is a terrible accountant."], ["ishita_roy", "Sleep first, decide later. Hard rule, easy to forget."]]],
   [LATE, "aarav_sharma", null, "The fridge hum, the ceiling fan, my own thoughts. A strange little band that only plays after 1 AM.", []],
-  [LATE, "yash_tiwari", null, "3 am and I am rethinking a sentence I said in class on Tuesday. Why does my brain keep the worst reel on loop.", [["nisha_pillai", "Everyone else forgot it by Tuesday evening, promise."], ["vihaan_gupta", "Brains are bad editors."]]],
-  [LATE, "priya_menon", "insomnia log", "Counted the ceiling cracks. 14. Counted the things I'm anxious about. Also 14. Coincidence? Probably not.", []],
+  [LATE, "yash_tiwari", null, "3 am and I am rethinking a sentence I said in class on Tuesday. Why does my brain keep the worst reel on loop.", [["nisha_pillai", "Everyone else forgot it by Tuesday evening, promise."], ["vihaan_gupta", "Brains are bad editors."]], true],
+  [LATE, "priya_menon", "insomnia log", "Counted the ceiling cracks. 14. Counted the things I'm anxious about. Also 14. Coincidence? Probably not.", [], true],
   [LATE, "harsh_vardhan", null, "Ate maggi at 2 am and felt like a philosopher. Chef's kiss.", [["rahul_dixit", "Maggi is the unofficial food of insight."]]],
   [LATE, "kavya_reddy", null, "Night is the only time I'm brave enough to text people back.", [["imran_ansari", "And regret it at 8 am. Relatable."]]],
   [LATE, "imran_ansari", "On being awake", "A city at 3 am sounds like a big animal breathing. I can't explain it better but I like it.", []],
@@ -105,7 +117,7 @@ const RAW = [
   // ---------- Code & Craft ----------
   [CODE, "kabir_singh", "Delete more than you add", "Today's best commit removed 212 lines and fixed a bug I had been fighting for a week. Fewer moving parts, fewer places to hide.", [["devansh_mehta", "Negative-line pull requests are the best kind."], ["arjun_patel", "Same energy as editing a paragraph."]]],
   [CODE, "devansh_mehta", null, "Rubber-duck debugging works because explaining forces you to say the assumption out loud. Mine was wrong, as usual.", [["kabir_singh", "The duck has solved more bugs than I have."]]],
-  [CODE, "arjun_patel", "Off-by-one, again", "Spent 90 minutes on a bug. It was `<` instead of `<=`. I'd like to formally apologise to my laptop.", [["aditya_rao", "Every developer has this exact story, in every language."]]],
+  [CODE, "arjun_patel", "Off-by-one, again", "Spent 90 minutes on a bug. It was `<` instead of `<=`. I'd like to formally apologise to my laptop.", [["aditya_rao", "Every developer has this exact story, in every language."], ["arjun_patel", "Haha, I put a sticky note on my monitor now: check your operators.", 0]]],
   [CODE, "aditya_rao", null, "Unpopular opinion: your side project doesn't need a microservice architecture. One file and a database is fine for a long time.", [["kabir_singh", "Agree. Boring tech ships."], ["arjun_patel", "I learned this the hard way last semester."]]],
   [CODE, "kabir_singh", null, "Reading other people's code is the real skill nobody teaches. Writing is the easy half.", []],
   [CODE, "yash_tiwari", "Fresher question", "Genuinely asking: how do you all remember git commands? I still google 'undo last commit' every single time.", [["arjun_patel", "Everyone googles it. I have a notes file with five commands I actually use."], ["devansh_mehta", "git reflog saved my project twice. Learn that one."]]],
@@ -143,14 +155,14 @@ const RAW = [
   [TRAV, "sara_khan", null, "Rule I learned: eat wherever the locals queue. It has never failed me, not even once.", []],
   [TRAV, "neha_kapoor", "Kasol, off-season", "Went in November. No crowds, no cafes open, just the river and a dog that adopted me for two days. 10/10, would be adopted again.", [["rohan_verma", "Off-season is the secret. Great pick."], ["priya_menon", "I want the dog's name."]]],
   [TRAV, "neha_kapoor", null, "Packed light for the first time. One bag, one jacket, one book. I missed nothing except my own overpacking.", [["rohan_verma", "The jacket is always the MVP."]]],
-  [TRAV, "aditya_rao", "Sleeper class", "Sleeper coach, a stranger's tiffin shared, three card games and a lifelong friendship by Jhansi. This is why I still book sleeper.", [["rahul_dixit", "Nothing beats a night train conversation."]]],
+  [TRAV, "aditya_rao", "Sleeper class", "Sleeper coach, a stranger's tiffin shared, three card games and a lifelong friendship by Jhansi. This is why I still book sleeper.", [["rahul_dixit", "Nothing beats a night train conversation."], ["aditya_rao", "The tiffin sharing is non-negotiable etiquette.", 0]]],
   [TRAV, "divya_chauhan", null, "My first solo trip: to a city two hours away. Felt like crossing an ocean. Highly recommend small brave steps.", [["neha_kapoor", "Proud of you. Where next?"]]],
   [TRAV, "imran_ansari", null, "Late-night highway chai, truck drivers, a radio playing something old. If I could bottle one feeling it'd be this.", []],
 
   // ---------- Letters to Myself ----------
   [LET, "meera_nair", "To me, five years from now", "I hope you still call your mother on Sundays, still keep one afternoon free for nothing, and still forgive yourself quickly.", [["ishita_roy", "Forgive yourself quickly. Writing that down for me too."]]],
   [LET, "ishita_roy", null, "Dear me, you worried about that conversation for three days. It lasted four minutes and went fine. Next time, start with the four minutes.", [["meera_nair", "Four minutes versus three days. Painfully true."]]],
-  [LET, "priya_menon", "Dear 17-year-old me", "You will not become what you planned. It will be fine. Better, even. Stop crying over the board results; nobody asks about them after a year.", [["nisha_pillai", "I needed this letter."]]],
+  [LET, "priya_menon", "Dear 17-year-old me", "You will not become what you planned. It will be fine. Better, even. Stop crying over the board results; nobody asks about them after a year.", [["nisha_pillai", "I needed this letter."]], true],
   [LET, "aditya_rao", null, "Note to self: failing twice is not the same as being a failure. It's just two data points.", [["kabir_singh", "Data points, not verdicts."]]],
   [LET, "yash_tiwari", "Dear future me", "If you're reading this after graduation: did we find the thing we like? And did we ever learn to wake up before 9?", [["devansh_mehta", "Spoiler: only one of those happens."]]],
   [LET, "nisha_pillai", null, "Dear me, you don't owe everyone an explanation. 'I can't make it' is a complete sentence.", [["ishita_roy", "Screenshotting this."]]],
@@ -175,7 +187,7 @@ const RAW = [
   [MIND, "simran_kaur", "Kneading dough", "There's something calm about kneading dough. Hands busy, mind quiet. The roti is a bonus.", [["priya_menon", "Cooking as meditation is real."]]],
 
   // ---------- Philosophy Corner ----------
-  [PHIL, "vihaan_gupta", "Ship of Theseus, but it's me", "Every cell, habit and opinion gets replaced over the years. What is the thread that stays 'me'? Memory? Or just the stubbornness to keep answering to the same name?", [["devansh_mehta", "I vote stubbornness."], ["aarav_sharma", "Maybe the thread is what we keep caring about."]]],
+  [PHIL, "vihaan_gupta", "Ship of Theseus, but it's me", "Every cell, habit and opinion gets replaced over the years. What is the thread that stays 'me'? Memory? Or just the stubbornness to keep answering to the same name?", [["devansh_mehta", "I vote stubbornness."], ["aarav_sharma", "Maybe the thread is what we keep caring about."], ["vihaan_gupta", "Stubbornness as identity. I am stealing that.", 0], ["devansh_mehta", "Care is a better thread, honestly.", 1]]],
   [PHIL, "devansh_mehta", null, "If a decision feels hard because both options are good, maybe the stakes are lower than they feel.", []],
   [PHIL, "nisha_pillai", "Free will, tired version", "I don't know if free will exists, but I do know I didn't choose to be this sleepy at 4 pm.", [["vihaan_gupta", "Determinism explains my afternoon slump."]]],
   [PHIL, "aditya_rao", null, "Is ambition a virtue or just anxiety with a better LinkedIn profile?", [["kabir_singh", "Both, depending on the day."], ["pooja_bhatt", "Ambition is virtue when it includes other people."]]],
@@ -213,7 +225,7 @@ const RAW = [
   // ---------- Study Circle ----------
   [STUDY, "devansh_mehta", "The 25-minute rule", "Twenty-five minutes on, five off, phone in another room. Not magic, but the guilt of 'I should be studying' finally disappeared.", [["kabir_singh", "Works for coding sessions too."]]],
   [STUDY, "kabir_singh", null, "Explain the chapter to an empty chair before the exam. Wherever you stumble is exactly what to revise.", [["devansh_mehta", "Trying it tonight."]]],
-  [STUDY, "yash_tiwari", "Syllabus panic", "Opened the syllabus. Closed the syllabus. Opened the fridge. Closed the fridge. Repeated both for 40 minutes.", [["devansh_mehta", "The classic."], ["arjun_patel", "Start with 10 minutes on the easiest chapter. Momentum is real."]]],
+  [STUDY, "yash_tiwari", "Syllabus panic", "Opened the syllabus. Closed the syllabus. Opened the fridge. Closed the fridge. Repeated both for 40 minutes.", [["devansh_mehta", "The classic."], ["arjun_patel", "Start with 10 minutes on the easiest chapter. Momentum is real."]], true],
   [STUDY, "nisha_pillai", null, "Study tip: write the answer in your own words, then compare to the book. Memorising is slower than understanding.", []],
   [STUDY, "arjun_patel", "Group study works", "Study groups only work if there's one person who actually studies, one who asks questions, and one who brings snacks. We have all three.", [["sara_khan", "The snack person is the real MVP."]]],
   [STUDY, "pooja_bhatt", null, "Tip for literature students: summarise each chapter in two sentences. If you can't, you haven't read it.", [["tanvi_joshi", "Brutal but true."]]],
@@ -247,18 +259,18 @@ const RAW = [
   [FIC, "priya_menon", null, "Wrote a 300-word story on my phone during a boring lecture. It's my best piece of the month. Sorry, professor.", []],
 
   // ---------- Mental Wellness ----------
-  [WELL, "ishita_roy", "Not every day is a good day", "A reminder to myself and anyone reading: a slow, low-energy day is not a failure. Rest is part of the work.", [["tanvi_joshi", "Needed this today. Thank you."]]],
+  [WELL, "ishita_roy", "Not every day is a good day", "A reminder to myself and anyone reading: a slow, low-energy day is not a failure. Rest is part of the work.", [["tanvi_joshi", "Needed this today. Thank you."]], true],
   [WELL, "tanvi_joshi", null, "Talking to a friend for ten minutes did more than two hours of overthinking. Reach out sooner than you think you should.", [["ishita_roy", "Always worth the awkward first sentence."]]],
   [WELL, "nisha_pillai", "Check-in", "Quiet reminder: drink water, eat something real, step outside for five minutes. Not a cure. A start.", [["priya_menon", "Doing all three right now."]]],
-  [WELL, "priya_menon", null, "Therapy week 3: learned that 'I'm fine' can be a sentence that hides an entire paragraph.", [["nisha_pillai", "Proud of you for going."]]],
-  [WELL, "yash_tiwari", "Homesick", "Ten days in the hostel and the quiet at night is the hardest part. Is it okay if this doesn't get better immediately?", [["divya_chauhan", "Completely okay. It got easier for me around week four."], ["nisha_pillai", "It's normal. Call someone at home each night, even for 5 minutes."]]],
+  [WELL, "priya_menon", null, "Therapy week 3: learned that 'I'm fine' can be a sentence that hides an entire paragraph.", [["nisha_pillai", "Proud of you for going."]], true],
+  [WELL, "yash_tiwari", "Homesick", "Ten days in the hostel and the quiet at night is the hardest part. Is it okay if this doesn't get better immediately?", [["divya_chauhan", "Completely okay. It got easier for me around week four."], ["nisha_pillai", "It's normal. Call someone at home each night, even for 5 minutes."], ["yash_tiwari", "Thank you both. Calling home tonight.", 1]], true],
   [WELL, "manav_malhotra", null, "Learned today that saying no is a boundary, not a rejection.", []],
   [WELL, "kabir_singh", null, "Burnout doesn't announce itself. It just makes your favourite things feel like chores. Taking a proper break this weekend.", [["ishita_roy", "Good call. Rest is productive too."]]],
 
   // ---------- Space (anonymous) ----------
   [null, "aarav_sharma", null, "I told my sister the truth tonight and the world did not end. It just got lighter.", [["ishita_roy", "Lighter is the right word."]]],
   [null, "meera_nair", null, "I still keep a voice note from someone who is no longer in my life. I do not listen to it. I just need to know it exists.", []],
-  [null, "kabir_singh", null, "I smiled through a whole interview while quietly panicking. Got the job. Still do not know how.", [["devansh_mehta", "Calm outside, chaos inside. Respect."]]],
+  [null, "kabir_singh", null, "I smiled through a whole interview while quietly panicking. Got the job. Still do not know how.", [["devansh_mehta", "Calm outside, chaos inside. Respect."], ["kabir_singh", "Chaos inside is exactly right. Thank you!", 0]]],
   [null, "ananya_iyer", null, "Somebody on the bus gave me their seat without a word. I thought about it all day.", []],
   [null, "rohan_verma", null, "Some friendships end without a fight. Two people just stop texting first. I miss mine.", [["sara_khan", "A text can still fix it. Send one."]]],
   [null, "ishita_roy", null, "I am proud of myself today for doing something small: I answered the phone call I had been avoiding.", [["vihaan_gupta", "That is not small."]]],
@@ -306,4 +318,12 @@ const RAW = [
   [null, "manav_malhotra", null, "Found an old notebook of mine from school. The 'future plans' page made me smile. I'm none of those things, and fine with it.", [["meera_nair", "Old notebooks are tiny time capsules."]]],
 ]
 
-export const ECHOES = RAW.map(([room, by, title, text, replies]) => ({ room, by, title, text, replies }))
+// replies: [writer, text, index of the reply being answered (optional)]
+export const ECHOES = RAW.map(([room, by, title, text, replies, anonymous]) => ({
+  room,
+  by,
+  title,
+  text,
+  replies: replies.map(([replyBy, replyText, replyTo]) => ({ by: replyBy, text: replyText, replyTo })),
+  anonymous: room === null || anonymous === true,
+}))

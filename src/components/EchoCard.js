@@ -8,6 +8,7 @@ import { api } from "@/libs/api"
 import Avatar from "@/components/Avatar"
 import Ghost from "@/components/Ghost"
 import Icon from "@/components/Icon"
+import MentionTextarea from "@/components/MentionTextarea"
 
 export function timeAgo(date) {
   const s = Math.floor((Date.now() - new Date(date).getTime()) / 1000)
@@ -35,7 +36,8 @@ export function Body({ text, clamp = false }) {
   )
 }
 
-export default function EchoCard({ echo, detail = false, onDeleted }) {
+export default function EchoCard({ echo: initial, detail = false, onDeleted }) {
+  const [echo, setEcho] = useState(initial)
   const { me } = useAuth()
   const toast = useToast()
   const [resonated, setResonated] = useState(!!echo.viewer?.resonated)
@@ -45,6 +47,9 @@ export default function EchoCard({ echo, detail = false, onDeleted }) {
   const [busy, setBusy] = useState(false)
   const [open, setOpen] = useState(false)
   const [confirming, setConfirming] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState({ title: "", content: "" })
+  const [saving, setSaving] = useState(false)
 
   const long = !detail && echo.content.length > 420
   const clamp = long && !open
@@ -89,6 +94,27 @@ export default function EchoCard({ echo, detail = false, onDeleted }) {
     }
   }
 
+  function startEdit() {
+    setDraft({ title: echo.title || "", content: echo.content })
+    setEditing(true)
+  }
+
+  async function saveEdit(e) {
+    e.preventDefault()
+    if (saving || !draft.content.trim()) return
+    setSaving(true)
+    try {
+      const data = await api(`/api/echoes/${echo.id}`, { method: "PATCH", body: draft })
+      setEcho(data.echo)
+      setEditing(false)
+      toast("Echo updated")
+    } catch (err) {
+      toast(err.message, "error")
+    } finally {
+      setSaving(false)
+    }
+  }
+
   const name = echo.author?.fullName
   return (
     <article className={`card${detail ? "" : " hoverable"}`}>
@@ -102,6 +128,8 @@ export default function EchoCard({ echo, detail = false, onDeleted }) {
           )}
           <div className="meta">
             <time dateTime={new Date(echo.createdAt).toISOString()} title={new Date(echo.createdAt).toLocaleString()}>{timeAgo(echo.createdAt)}</time>
+            {echo.editedAt && <span className="edited" title={new Date(echo.editedAt).toLocaleString()}>edited</span>}
+            {echo.room && echo.isAnonymous && <span className="chip anon">Anonymous</span>}
             {echo.room ? (
               <Link className="chip" href={`/rooms/${echo.room.id}`}>{echo.room.name}</Link>
             ) : (
@@ -111,12 +139,28 @@ export default function EchoCard({ echo, detail = false, onDeleted }) {
         </div>
       </div>
 
-      {echo.title && (
-        <h3 className="echo-title">{detail ? echo.title : <Link href={`/echo/${echo.id}`}>{echo.title}</Link>}</h3>
-      )}
-      <Body text={echo.content} clamp={clamp} />
-      {long && (
-        <button className="readmore" onClick={() => setOpen((o) => !o)}>{open ? "Show less" : "Read more"}</button>
+      {editing ? (
+        <form className="reply-form" onSubmit={saveEdit}>
+          <input className="input" aria-label="Title" placeholder="Title (optional)" maxLength={120} value={draft.title} onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))} />
+          <MentionTextarea className="input" aria-label="Edit your echo" maxLength={5000} required rows={5} value={draft.content} onChange={(content) => setDraft((d) => ({ ...d, content }))} />
+          <div className="bar">
+            <span className="counter">{draft.content.length}/5000</span>
+            <span className="row">
+              <button type="button" className="btn quiet small" onClick={() => setEditing(false)}>Cancel</button>
+              <button className="btn primary small" disabled={saving || !draft.content.trim()}>{saving ? "Saving…" : "Save"}</button>
+            </span>
+          </div>
+        </form>
+      ) : (
+        <>
+          {echo.title && (
+            <h3 className="echo-title">{detail ? echo.title : <Link href={`/echo/${echo.id}`}>{echo.title}</Link>}</h3>
+          )}
+          <Body text={echo.content} clamp={clamp} />
+          {long && (
+            <button className="readmore" onClick={() => setOpen((o) => !o)}>{open ? "Show less" : "Read more"}</button>
+          )}
+        </>
       )}
 
       <div className="echo-actions">
@@ -132,8 +176,11 @@ export default function EchoCard({ echo, detail = false, onDeleted }) {
           <Icon name="bookmark" /> {counts.saves}
         </button>
 
+        {echo.isMine && !editing && !confirming && (
+          <button className="act grow" onClick={startEdit} aria-label="Edit echo"><Icon name="edit" /></button>
+        )}
         {(echo.isMine || echo.canModerate) && !confirming && (
-          <button className="act grow" onClick={() => setConfirming(true)} aria-label="Delete echo"><Icon name="trash" /></button>
+          <button className={`act${echo.isMine && !editing ? "" : " grow"}`} onClick={() => setConfirming(true)} aria-label="Delete echo"><Icon name="trash" /></button>
         )}
         {(echo.isMine || echo.canModerate) && confirming && (
           <span className="act grow">

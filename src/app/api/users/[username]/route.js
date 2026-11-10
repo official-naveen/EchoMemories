@@ -23,9 +23,9 @@ export async function GET(req, context) {
         pulseScore: true,
         streakDays: true,
         createdAt: true,
-        _count: { select: { echoes: { where: { room: { isPublic: true } } }, roomMemberships: { where: { room: { isPublic: true } } } } },
+        _count: { select: { echoes: { where: { isAnonymous: false, OR: [{ room: { isPublic: true } }, { isInSpace: true }] } }, roomMemberships: { where: { room: { isPublic: true } } } } },
         echoes: {
-          where: { room: { isPublic: true } },
+          where: { isAnonymous: false, OR: [{ room: { isPublic: true } }, { isInSpace: true }] },
           orderBy: { createdAt: "desc" },
           take: 10,
           select: {

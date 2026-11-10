@@ -5,7 +5,7 @@ import "dotenv/config"
 import crypto from "node:crypto"
 import bcrypt from "bcryptjs"
 import pg from "pg"
-import { ROOMS, WRITERS, ECHOES } from "./seed-data.mjs"
+import { ROOMS, WRITERS, ECHOES, DEFAULT_RULES, EXTRA_RULES } from "./seed-data.mjs"
 
 const cuid = () => "c" + crypto.randomBytes(12).toString("hex")
 const HOUR = 3600_000
@@ -49,15 +49,17 @@ try {
   const roomIds = new Map()
   let roomsCreated = 0
   for (const [name, description] of ROOMS) {
+    const rules = [DEFAULT_RULES, EXTRA_RULES[name]].filter(Boolean).join("\n")
     const existing = await one('SELECT id FROM "Room" WHERE name = $1 AND "isPublic" = true', [name])
     if (existing) {
       roomIds.set(name, existing.id)
+      await client.query('UPDATE "Room" SET rules = $1 WHERE id = $2 AND rules IS NULL', [rules, existing.id])
       continue
     }
     const id = cuid()
     await client.query(
-      'INSERT INTO "Room" (id, name, description, "isPublic", "createdById") VALUES ($1,$2,$3,true,$4)',
-      [id, name, description, team.id]
+      'INSERT INTO "Room" (id, name, description, rules, "isPublic", "createdById") VALUES ($1,$2,$3,$4,true,$5)',
+      [id, name, description, rules, team.id]
     )
     await client.query(`INSERT INTO "RoomMember" (id, "userId", "roomId", role) VALUES ($1,$2,$3,'ADMIN')`, [cuid(), team.id, id])
     roomIds.set(name, id)
@@ -106,16 +108,22 @@ try {
     const createdAt = new Date(now - ((order.length - i) / order.length) * 21 * 24 * HOUR + rand() * 6 * HOUR)
     const echoId = cuid()
     await client.query(
-      'INSERT INTO "Echo" (id, title, content, "authorId", "roomId", "isInSpace", "createdAt") VALUES ($1,$2,$3,$4,$5,$6,$7)',
-      [echoId, echo.title ?? null, echo.text, authorId, echo.room ? roomIds.get(echo.room) : null, !echo.room, createdAt]
+      'INSERT INTO "Echo" (id, title, content, "authorId", "roomId", "isInSpace", "isAnonymous", "createdAt") VALUES ($1,$2,$3,$4,$5,$6,$7,$8)',
+      [echoId, echo.title ?? null, echo.text, authorId, echo.room ? roomIds.get(echo.room) : null, !echo.room, echo.anonymous, createdAt]
     )
     echoesCreated++
 
-    for (const [replyBy, text] of echo.replies) {
-      const at = new Date(Math.min(now, createdAt.getTime() + (20 + rand() * 400) * 60_000))
-      await client.query('INSERT INTO "Comment" (id, content, "authorId", "echoId", "createdAt") VALUES ($1,$2,$3,$4,$5)', [
-        cuid(), text, writers.get(replyBy), echoId, at,
-      ])
+    // On anonymous echoes most replies are anonymous too; the original poster always is.
+    const replyIds = []
+    for (const reply of echo.replies) {
+      const at = new Date(Math.min(now, createdAt.getTime() + (20 + (replyIds.length + rand()) * 200) * 60_000))
+      const anonymous = echo.anonymous && (reply.by === echo.by || rand() < 0.65)
+      const id = cuid()
+      await client.query(
+        'INSERT INTO "Comment" (id, content, "authorId", "echoId", "parentId", "isAnonymous", "createdAt") VALUES ($1,$2,$3,$4,$5,$6,$7)',
+        [id, reply.text, writers.get(reply.by), echoId, reply.replyTo === undefined ? null : replyIds[reply.replyTo], anonymous, at]
+      )
+      replyIds.push(id)
     }
 
     const others = writerIds.filter((id) => id !== authorId).sort(() => rand() - 0.5)
