@@ -101,6 +101,7 @@ Every table with every column (PK = primary key, FK = foreign key, UK = unique).
 2. Move the rate limiter to Redis.
 3. Add unit tests and run the end-to-end checks automatically on every push.
 4. Image uploads for avatars.
+5. The rest of my notebook ideas: daily prompts, badges and levels, and room competitions.
 
 ## Run it locally
 
@@ -126,9 +127,15 @@ With `EMAIL_USER` and `EMAIL_PASS` empty, codes are printed in the server consol
 
 Useful commands: `npm run db:seed` (safe to repeat), `npm run lint`, `npm run test:e2e` (needs a running server and a development database).
 
-## About how I built it
+## How I built it
 
-I used Claude, an AI assistant, to help write and review code while I decided what to build, tested it, and deployed it. I'm still learning, and I can walk through the parts above in detail.
+This project took me months, and most of that time was spent before writing code. I filled notebook pages working out what would make it different: two kinds of echoes (Space, where your voice never comes back, and rooms, where it echoes back later), and a Pulse score that I worked out by hand, step by step with example numbers. Then I chose the stack, decided how to organise the files in layers (page, API, service, database), and planned how to keep it easy to maintain and able to grow.
+
+I used Claude, an AI assistant, to write most of the code. I read all of it to check that it was correct and that I understood it, then tested and deployed it myself. This is my first Next.js project, and I learned a lot from it: the App Router, designing a database with Prisma, keeping permission rules in one place, and thinking about authentication, security and anonymity.
+
+Some ideas from my notebook are not built yet: daily writing prompts, levels and badges, room-versus-room competitions, and unlocking images and video as your Pulse grows. The Pulse in the app also uses different weights from the exact formula I worked out on paper.
+
+In the future, I will make it better by building the pages and ideas I planned at the start, and adding new ones.
 
 ## Author
 
